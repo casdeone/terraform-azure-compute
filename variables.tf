@@ -69,4 +69,5 @@ variable "environment" {
 variable "vm_size" {
   type        = string
   description = "virtual machine size"
+  default = "Standard_DS1_v2"
 }
