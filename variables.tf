@@ -56,18 +56,15 @@ variable "prefix" {
 }
 variable "vm_prefix" {
   type        = string
-  default     = "tfvm"
   description = "vm prefix"
 }
 
 variable "environment" {
   type        = string
-  default     = "staging"
   description = "environment"
 }
 
 variable "vm_size" {
   type        = string
   description = "virtual machine size"
-  default = "Standard_DS1_v2"
 }
