@@ -86,5 +86,5 @@ resource "azurerm_virtual_machine" "vm" {
   tags = merge(var.vm_tags, {
     environment = var.environment
   })
- 
+
 }
