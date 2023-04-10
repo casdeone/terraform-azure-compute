@@ -30,7 +30,7 @@ module "test" {
     subnet_id           = azurerm_subnet.subnet.id
     enable_public_ip    = true
     vm_size             = "Standard_DS1_v2"
-    admin_username      = "admin"
+    admin_username      = "vmadmin"
     prefix              = "dev"
     tags = {
       environment = "nonprod"
@@ -43,7 +43,7 @@ module "test" {
     subnet_id           = azurerm_subnet.subnet.id
     enable_public_ip  = true
     vm_size             = "Standard_DS1_v2"
-    admin_username      = "admin"
+    admin_username      = "vmadmin"
     prefix              = "dev"
     tags = {
       environment = "nonprod"
