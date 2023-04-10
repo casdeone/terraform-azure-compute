@@ -7,84 +7,69 @@ resource "random_password" "password" {
   lower   = true
 }
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.prefix}-rg"
-  location = var.location
-  tags = merge(var.tags, {
+  for_each = {for rg in var.vm_settings : "rg-${rg.name}" => rg}
+  name     = "${each.value.prefix}-rg"
+  location = each.value.location
+  tags = merge(each.value.tags, {
     environment = "staging"
   })
 }
 
-resource "azurerm_virtual_network" "main" {
-  name                = "${var.prefix}-network"
+resource "azurerm_virtual_network" "vnet" {
+  for_each = {for vnet in var.vm_settings : "vnet -${vnet.name}" => vnet}
+  name                = "vnet-${each.value.prefix}"
   address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags = merge(var.tags, {
-    environment = var.environment
-  })
+  location            = azurerm_resource_group.rg[each.value.name].location
+  resource_group_name = azurerm_resource_group.rg[each.value.name].name
+  tags = merge(each.value.tags,)
 
 }
 
-resource "azurerm_subnet" "internal" {
-  name                 = "internal"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.main.name
+resource "azurerm_subnet" "subnet" {
+  for_each = {for subnet in var.vm_settings : "vnet -${subnet.name}" => subnet}
+  name                 = "private-subnet"
+  resource_group_name  = azurerm_resource_group.rg[each.value.name].name
+  virtual_network_name = azurerm_virtual_network.vnet[each.value.name].name
   address_prefixes     = ["10.0.2.0/24"]
 
 
 }
 
-resource "azurerm_network_interface" "vm_nic" {
-  name                = "${var.vm_prefix}-nic"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+resource "azurerm_network_interface" "nic" {
+  for_each = {for nic in var.vm_settings : "nic -${nic.name}" => nic}
+  name                = "nic-${each.value.prefix}"
+  location            = azurerm_resource_group.rg[each.value.name].location
+  resource_group_name = azurerm_resource_group.rg[each.value.name].name
 
   ip_configuration {
-    name                          = "testconfiguration1"
-    subnet_id                     = azurerm_subnet.internal.id
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.subnet[each.value.name].id
     private_ip_address_allocation = "Dynamic"
   }
-  tags = merge(var.tags, {
-    environment = var.environment
-  })
+  tags = merge(each.value.tags)
 
 }
 
-resource "azurerm_virtual_machine" "vm" {
-  name                  = "${var.vm_prefix}-vm"
-  location              = azurerm_resource_group.rg.location
-  resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.vm_nic.id]
-  vm_size               = var.vm_size
+resource "azurerm_windows_virtual_machine" "vm" {
+  for_each = {for vm in var.vm_settings : "vm-${vm.name}" => vm}
+  name                          = "vm-${each.value.name}"
+  location                      = azurerm_resource_group.rg[each.value.name].location
+  resource_group_name           = azurerm_resource_group.rg[each.value.name].name
+  size                          = each.value.vm_size
+  admin_username                = each.value.admin_username
+  admin_password                = random_password.password.result
 
-  # Uncomment this line to delete the OS disk automatically when deleting the VM
-  delete_os_disk_on_termination = true
+  network_interface_ids = [azurerm_network_interface.nic[each.value.name].id]
 
-  # Uncomment this line to delete the data disks automatically when deleting the VM
-  delete_data_disks_on_termination = true
-
-  storage_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2016-Datacenter"
     version   = "latest"
   }
-  storage_os_disk {
-    name              = "${var.vm_prefix}-os-disk"
+  os_disk {
     caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
+    storage_account_type = "Standard_LRS"
   }
-  os_profile {
-    computer_name  = "${var.vm_prefix}-vm"
-    admin_username = "testadmin"
-    admin_password = random_password.password.result
-  }
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
-  tags = merge(var.vm_tags, {
-    environment = var.environment
-  })
-
+ 
 }
