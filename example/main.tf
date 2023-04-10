@@ -31,23 +31,25 @@ module "test" {
     enable_public_ip    = true
     vm_size             = "Standard_DS1_v2"
     admin_username      = "vmadmin"
+    allowed_ip          = "38.44.194.233/32"
     prefix              = "dev"
     tags = {
       environment = "nonprod"
     }
-  },
-  {
-    name                = "server2"
-    resource_group_name = azurerm_resource_group.rg.name
-    location            = azurerm_resource_group.rg.location
-    subnet_id           = azurerm_subnet.subnet.id
-    enable_public_ip  = true
-    vm_size             = "Standard_DS1_v2"
-    admin_username      = "vmadmin"
-    prefix              = "dev"
-    tags = {
-      environment = "nonprod"
-    }
+    },
+    {
+      name                = "server2"
+      resource_group_name = azurerm_resource_group.rg.name
+      location            = azurerm_resource_group.rg.location
+      subnet_id           = azurerm_subnet.subnet.id
+      enable_public_ip    = true
+      vm_size             = "Standard_DS1_v2"
+      admin_username      = "vmadmin"
+      allowed_ip          = "38.44.194.233/32"
+      prefix              = "dev"
+      tags = {
+        environment = "nonprod"
+      }
 
   }]
 
