@@ -49,13 +49,6 @@ resource "azurerm_key_vault_secret" "secret" {
   
 }
 
-resource "azurerm_role_assignment" "key_admin" {
-  principal_id = data.azuread_client_config.current.object_id
-  scope = azurerm_key_vault.kv.id
-  
-}
-
-
 
 module "test" {
   source = "../"
