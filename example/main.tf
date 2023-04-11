@@ -3,16 +3,13 @@ data "azuread_client_config" "current" {
 
 data "azurerm_resource_group" "rg_ss" {
   name = "rg-ss"
-  
+
 }
-data "azurerm_key_vault" "kv_casdeone1" {
-  name = "kv-casdeone1"
-  resource_group_name = "rg-ss"
-}
+
 
 
 resource "random_password" "password" {
-  length = 20
+  length  = 20
   special = true
 }
 resource "azurerm_resource_group" "rg" {
@@ -38,19 +35,6 @@ resource "azurerm_subnet" "subnet" {
 }
 
 
-resource "azurerm_key_vault_secret" "username" {
-  key_vault_id = data.azurerm_key_vault.kv_casdeone1.id
-  name = "windows-admin-username"
-  value = "vmadministrator"
-  
-}
-resource "azurerm_key_vault_secret" "secret" {
-  key_vault_id = data.azurerm_key_vault.kv_casdeone1.id
-  name = "windows-admin-password"
-  value = random_password.password.result
-  
-}
-
 
 module "test" {
   source = "../"
@@ -61,8 +45,8 @@ module "test" {
     subnet_id           = azurerm_subnet.subnet.id
     enable_public_ip    = true
     vm_size             = "Standard_DS1_v2"
-    admin_username      = azurerm_key_vault_secret.username.value
-    admin_password      = azurerm_key_vault_secret.secret.value
+    admin_username      = var.vm_username
+    admin_password      = var.vm_password
     allowed_ip          = "38.44.194.233/32"
     prefix              = "dev"
     tags = {
@@ -76,8 +60,8 @@ module "test" {
       subnet_id           = azurerm_subnet.subnet.id
       enable_public_ip    = true
       vm_size             = "Standard_DS1_v2"
-      admin_username      = "vmadmin"
-      admin_password      = azurerm_key_vault_secret.secret.value
+      admin_username      = var.vm_username
+      admin_password      = var.vm_password
       allowed_ip          = "38.44.194.233/32"
       prefix              = "dev"
       tags = {
