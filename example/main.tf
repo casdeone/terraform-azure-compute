@@ -72,43 +72,59 @@ module "test" {
 
 }
 
-
-/* data "azurerm_key_vault_secret" "admin_username" {
-  name         = "admin-username"
-  key_vault_id = var.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "admin_password" {
-  name         = "admin-password"
-  key_vault_id = var.key_vault_id
-}
-
 resource "azurerm_virtual_machine_extension" "join_adds" {
+  for_each = {for vm in module.test.vm_ids: vm.name => vm
+    if vm.name == "server2"}
   name                 = "join-adds"
-  virtual_machine_id   = azurerm_virtual_machine.example.id
+  virtual_machine_id   = each.value.id
   publisher            = "Microsoft.Compute"
   type                 = "JsonADDomainExtension"
   type_handler_version = "1.3"
   
   settings = <<SETTINGS
     {
-      "Name": "${var.domain_name}",
-      "OUPath": "${var.ou_path}",
-      "User": "${data.azurerm_key_vault_secret.admin_username.value}",
+      "Name": "mydomain.com",
+      "OUPath": "OU=myServers,CN=mycomain,CN=com",
+      "User": "${var.vm_joindomain}",
       "Restart": "true",
       "Options": "3",
       "DomainJoinOptions": "3",
-      "JoinDomain": "${var.domain_name}",
+      "JoinDomain": "mydomain.com",
       "Credentials": {
-        "Password": "${data.azurerm_key_vault_secret.admin_password.value}",
-        "Username": "${data.azurerm_key_vault_secret.admin_username.value}"
+        "Password": "${var.vm_joindomain}",
+        "Username": "${var.vm_joindomain_password}"
       }
     }
   SETTINGS
   
   protected_settings = <<PROTECTED_SETTINGS
     {
-      "Password": "${data.azurerm_key_vault_secret.admin_password.value}"
+      "Password": "${var.vm_joindomain_password}"
     }
   PROTECTED_SETTINGS
-} */
+
+  depends_on = [
+    module.test
+  ]
+} 
+
+/*
+#
+# Windows PowerShell script for AD DS Deployment
+#
+
+Import-Module ADDSDeployment
+Install-ADDSForest `
+-CreateDnsDelegation:$false `
+-DatabasePath "C:\Windows\NTDS" `
+-DomainMode "WinThreshold" `
+-DomainName "mydomain.com" `
+-DomainNetbiosName "MYDOMAIN" `
+-ForestMode "WinThreshold" `
+-InstallDns:$true `
+-LogPath "C:\Windows\NTDS" `
+-NoRebootOnCompletion:$false `
+-SysvolPath "C:\Windows\SYSVOL" `
+-Force:$true
+
+*/ 
