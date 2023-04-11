@@ -74,8 +74,8 @@ module "test" {
 
 resource "azurerm_virtual_machine_extension" "join_adds" {
   for_each = {for vm in module.test.vm_ids: vm.name => vm
-    if vm.name == "server2"}
-  name                 = "join-adds"
+    if vm.name == "vm-server2"}
+  name                 = each.value.name
   virtual_machine_id   = each.value.id
   publisher            = "Microsoft.Compute"
   type                 = "JsonADDomainExtension"
@@ -84,7 +84,7 @@ resource "azurerm_virtual_machine_extension" "join_adds" {
   settings = <<SETTINGS
     {
       "Name": "mydomain.com",
-      "OUPath": "OU=myServers,CN=mycomain,CN=com",
+      "OUPath": "OU=myServers,CN=mydomain,CN=com",
       "User": "${var.vm_joindomain}",
       "Restart": "true",
       "Options": "3",
