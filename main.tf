@@ -7,22 +7,6 @@ resource "random_password" "password" {
   lower   = true
 }
 
-
-resource "azurerm_network_interface" "nic" {
-  for_each = {for nic in var.vm_settings : "nic-${nic.name}" => nic}
-  name                = "nic-${each.value.name}"
-  location            = each.value.location
-  resource_group_name = each.value.resource_group_name
-
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = each.value.subnet_id
-    private_ip_address_allocation = "Dynamic"
-  }
-  tags = each.value.tags
-
-}
-
 resource "azurerm_public_ip" "pip" {
   for_each = { for pip in var.vm_settings : "pip-${pip.name}" => pip}
   name                = "pip-${each.value.name}"
@@ -34,6 +18,54 @@ resource "azurerm_public_ip" "pip" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+
+resource "azurerm_network_interface" "nic" {
+  for_each = {for nic in var.vm_settings : "nic-${nic.name}" => nic}
+  name                = "nic-${each.value.name}"
+  location            = each.value.location
+  resource_group_name = each.value.resource_group_name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = each.value.subnet_id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id = azurerm_public_ip.pip["pip-${each.value.name}"].id
+  }
+  tags = each.value.tags
+
+  depends_on = [
+    azurerm_public_ip.pip
+  ]
+
+}
+
+
+# Create Network Security Group and rule
+resource "azurerm_network_security_group" "nsg" {
+  for_each = {for nsg in var.vm_settings : "nsg-${nsg.name}" => nsg}
+  name                = "nsg-${each.value.name}"
+  location            = each.value.location
+  resource_group_name = each.value.resource_group_name
+
+  security_rule {
+    name                       = "RDP"
+    priority                   = 1001
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = each.value.allowed_ip
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_network_interface_security_group_association" "nsg" {
+  for_each = {for nsg in var.vm_settings : "nsg-${nsg.name}" => nsg}
+  network_interface_id      = azurerm_network_interface.nic["nic-${each.value.name}"].id
+  network_security_group_id = azurerm_network_security_group.nsg["nsg-${each.value.name}"].id
 }
 
 resource "azurerm_windows_virtual_machine" "vm" {
