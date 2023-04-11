@@ -75,7 +75,7 @@ module "test" {
 resource "azurerm_virtual_machine_extension" "join_adds" {
   for_each = {for vm in module.test.vm_ids: vm.name => vm
     if vm.name == "vm-server2"}
-  name                 = each.value.name
+  name                 = "joindomain"
   virtual_machine_id   = each.value.id
   publisher            = "Microsoft.Compute"
   type                 = "JsonADDomainExtension"
