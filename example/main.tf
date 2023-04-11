@@ -91,8 +91,8 @@ resource "azurerm_virtual_machine_extension" "join_adds" {
       "DomainJoinOptions": "3",
       "JoinDomain": "mydomain.com",
       "Credentials": {
-        "Password": "${var.vm_joindomain}",
-        "Username": "${var.vm_joindomain_password}"
+        "Password": "${var.vm_joindomain_password}",
+        "Username": "${var.vm_joindomain_username}"
       }
     }
   SETTINGS
