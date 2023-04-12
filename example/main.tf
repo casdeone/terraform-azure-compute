@@ -52,28 +52,36 @@ module "test" {
     tags = {
       environment = "nonprod"
     }
-    },
-    {
-      name                = "server2"
-      resource_group_name = azurerm_resource_group.rg.name
-      location            = azurerm_resource_group.rg.location
-      subnet_id           = azurerm_subnet.subnet.id
-      enable_public_ip    = true
-      vm_size             = "Standard_DS1_v2"
-      admin_username      = var.vm_username
-      admin_password      = var.vm_password
-      allowed_ip          = "38.44.194.233/32"
-      prefix              = "dev"
-      tags = {
-        environment = "nonprod"
-      }
-
-  }]
+    }]
 
 }
 
+/*
+module "test1" {
+  source = "../"
+  vm_settings = [{
+    name                = "server2"
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = azurerm_resource_group.rg.location
+    subnet_id           = azurerm_subnet.subnet.id
+    enable_public_ip    = true
+    vm_size             = "Standard_DS1_v2"
+    admin_username      = var.vm_username
+    admin_password      = var.vm_password
+    allowed_ip          = "38.44.194.233/32"
+    prefix              = "dev"
+    tags = {
+      environment = "nonprod"
+    }
+    }]
+
+}
+*/
+
+
+# https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/overview
 resource "azurerm_virtual_machine_extension" "join_adds" {
-  for_each = {for vm in module.test.vm_ids: vm.name => vm
+  for_each = {for vm in module.test1.vm_ids: vm.name => vm
     if vm.name == "vm-server2"}
   name                 = "joindomain"
   virtual_machine_id   = each.value.id
