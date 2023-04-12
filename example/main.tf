@@ -84,7 +84,7 @@ resource "azurerm_virtual_machine_extension" "join_adds" {
   settings = <<SETTINGS
     {
       "Name": "mydomain.com",
-      "OUPath": "OU=myServers,CN=mydomain,CN=com",
+      "OUPath": "OU=myServers,DC=mydomain,DC=com",
       "User": "${var.vm_joindomain}",
       "Restart": "true",
       "Options": "3",
