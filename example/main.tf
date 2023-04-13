@@ -56,7 +56,7 @@ module "test" {
 
 }
 
-/*
+
 module "test1" {
   source = "../"
   vm_settings = [{
@@ -76,7 +76,7 @@ module "test1" {
     }]
 
 }
-*/
+
 
 
 # https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/overview
