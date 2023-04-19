@@ -56,7 +56,8 @@ module "test" {
 
 }
 
-
+// wait
+/*
 module "test1" {
   source = "../"
   vm_settings = [{
